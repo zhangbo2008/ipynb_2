@@ -1,0 +1,6 @@
+if os.uname().nodename=='PC-202003302200':
+    #============做本地适配
+    anno='/mnt/e/ydata-tvsum50-v1_1/ydata-tvsum50-anno.tsv'
+    info='/mnt/e/ydata-tvsum50-v1_1/ydata-tvsum50-info.tsv'
+
+    datap='/mnt/e/ydata-tvsum50-v1_1/video'

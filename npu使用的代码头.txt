@@ -1,0 +1,14 @@
+
+
+#========这里有钱的磁力数据, 一个是正样本, 一个是负样本.
+# 负样本很少, 并且采集不了. 自己做也费劲. 看看如何正样本自动提取特征.
+# 自编码. 注意力, bert这种.
+import torch
+import torch_npu
+device = 'npu' if torch.npu.is_available() else 'cpu'
+print(device)
+print(1)
+
+a=torch.device("cuda" if torch.cuda.is_available() else  'npu' if torch.npu.is_available()  else  "cpu") 
+
+print(a)

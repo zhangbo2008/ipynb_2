@@ -1,0 +1,3 @@
+from IPython.display import display
+for img in images:
+    display(img)

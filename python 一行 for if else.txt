@@ -1,0 +1,1 @@
+[i  if a>0 else 180-i for i in a]

@@ -1,0 +1,4 @@
+from pathlib import Path 
+x='/mnt/e/ChatGLM-Efficient-Tuning-main'
+a=[y for y in Path(x).rglob('*') if y.is_file()]
+print(1)

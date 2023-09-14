@@ -1,0 +1,7 @@
+    def videochufa():
+        print('运行videochufa')
+        videostate.play() # ========这种对象,不能传参,只能用全局变量.
+        videostate.autoplay=True
+        videostate.value='test6.mp4'
+        print(videostate.autoplay)
+        return gr.update(value='test6.mp4') ########===========需要更新组件,要在返回函数里面写update,然后把值写上去.

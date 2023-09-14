@@ -1,0 +1,9 @@
+# get dataset
+for i in range(10):
+    try:
+        dataset = load_dataset("imdb")#=======这里写上需要反复重连的代码.
+        break
+    except Exception as  e:
+        print(-11111111111111)
+        print(e)
+        pass

@@ -1,0 +1,9 @@
+!fuser -v /dev/nvidia*  #清空显存.
+!kill 15821    # 这里面输入号. 号会运行这块之后出现.
+!nvidia-smi
+
+
+
+if 'c' in locals():  #删除变量c
+    del c
+torch.cuda.empty_cache()

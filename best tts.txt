@@ -1,0 +1,1 @@
+edge-tts --voice zh-CN-YunxiNeural --text "hello 大家好，这里是人工智能研究所" --write-media hello.mp3

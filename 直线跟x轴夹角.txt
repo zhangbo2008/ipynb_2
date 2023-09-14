@@ -1,0 +1,11 @@
+import math
+#=========输入一个直线, 计算他跟x轴的夹角.
+def jiajiao(line):   # 4点决定一个线
+		if (line[2]-line[0]) :
+			a=math.atan((line[3]-line[1])/(line[2]-line[0]))/math.pi*180 
+			if a<0:
+				return 180+a
+			return a
+		else:
+			return 90
+        # a=jiajiao([0,0,-1,1])   # 对于两两直线的夹角也非常容易, 做差即可.

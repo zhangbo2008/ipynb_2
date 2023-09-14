@@ -1,0 +1,6 @@
+#========maxidex 抽取10秒即可.#=当前抽取mp4会bug,因为底层不是python实现的原因, 所以保存为gif. 再用其他软件转gif为mp4或者avi即可.
+if 1:
+    import ffmpeg
+    ffmpeg.input("somevideo/Bhxk-O1Y7Ho.mp4").trim(start=maxidex, duration=minikuai*2).output('output.gif').overwrite_output().run()
+
+

@@ -1,0 +1,665 @@
+#==========最后还需要四角的平行四边形修正!
+
+
+
+
+
+###########2023-08-01,23点40 cv2.canny 跑完之后的结果是白色图片的外面一圈, 并且这一圈是真包含白色图片的. 也就是外围包上. 而我们算四边形是真内被包含所以能算的对.  但是后面的直线检测,就会对是否在边界上有矛盾, 后续要看这个.!!!!!!!
+# 有圆角的部分, 使用多边形拟合,感觉差点意思!!!!!!!!!!!
+# 复用我ocr部分来看, 能不能更高精度!
+
+import cv2
+import numpy as np
+# from cnocr import CnOcr
+#==========注意输入图片大小一定的.
+def show(image, window_name):
+    # cv2.namedWindow(window_name, 0)
+    cv2.imwrite(window_name+'.png', image)
+
+import math
+image = cv2.imread('1103145345_00/Z_R_F.bmp')
+image = cv2.imread('1103145345_00/F_B.bmp')
+image = cv2.imread('1103145345_00/F_B.bmp')
+image = cv2.imread('1103145345_00/F_B.bmp')
+image = cv2.imread('1103145345_00/F_B.bmp')
+image = cv2.imread('1103145345_00/F_B.bmp')
+image = cv2.imread('1103145345_00/F_B.bmp')
+image = cv2.imread('1103145345_00/F_B.bmp')
+image = cv2.imread('1103145345_00/F_G.bmp')
+image = cv2.imread('1103145345_00/F_R_F.bmp')
+
+# image = cv2.imread('1103145345_00/F_R_F.bmp')
+# image = cv2.imread('1103145345_00/Z_IR_T.bmp')
+# image = cv2.imread('1103145345_00/F_R_F.bmp')
+# image = cv2.imread('jianwei/50/f1.png')
+# image = cv2.imread('jianwei/50/f2_1.png')
+# image = cv2.imread('jianwei/50/f2.png')
+# image = cv2.imread('jianwei/50/f3_1.jpg')
+# image = cv2.imread('jianwei/50/f3.png')
+# image = cv2.imread('jianwei/50/t1.png')
+# image = cv2.imread('jianwei/50/f3.png')
+# image = cv2.imread('jianwei/50/t2.png')
+# image = cv2.imread('jianwei/50/t3.jpg')
+import argparse
+import imutils
+import cv2
+
+import numpy as np
+kernel = np.ones((1, 5), np.uint8)
+# img = cv2.imread('tmp99.png')
+# img = cv2.imread('data/tq.jpg')
+img = image
+gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)  
+ret, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+
+
+
+#=============投影:去除黑条或者白条或者灰跳. 判断条件就是mean等于第一个值.
+# shuipingtouying=np.mean(binary,axis=0)
+# shuzhitouying=np.mean(binary,axis=1)
+
+# outdex=[]
+# for dex, i in enumerate(shuipingtouying):
+#     if i!=binary[0, dex]:
+#         outdex.append(dex)
+# outdex2=[]
+# for dex, i in enumerate(shuzhitouying):
+#     if i!=binary[ dex,0]:
+#         outdex2.append(dex)
+# binary=binary[outdex2,:]
+# binary=binary[:,outdex]
+# #print()
+        
+image=image[:,20:-20]
+binary=binary[:,20:-20]
+old_image=image
+#======反转颜色 =========归一化到黑底白色图片才行. 背景色要是黑色的!
+if binary[0][0] == 255:
+    binary=255-binary
+    old_image=image
+    image=255-image
+    pass
+
+# binary=255-binary
+
+cv2.imwrite("13里面二值化的图片.png", binary)   
+binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel, anchor=(2, 0), iterations=2)  # 二值化.
+# cv2.imwrite("img2.png", binary)  
+contours = cv2.findContours(binary,cv2.RETR_CCOMP  ,cv2.CHAIN_APPROX_SIMPLE)  # 参数说明;https://docs.opencv.org/4.0.0/d3/dc0/group__imgproc__shape.html#ga819779b9857cc2f8601e6526a3a5bc71 
+contours = imutils.grab_contours(contours) #适配cv2各个版本.
+contours = sorted(contours, key=cv2.contourArea, reverse=True)
+contours = contours[0]
+img=binary.copy()
+img999=binary.copy()
+binary222=cv2.drawContours(img,contours,-1,(0,255,255),1)  
+cv2.imwrite("13里面的findcountours边缘.png", binary222)
+
+
+
+
+epsilon = 0.02 * cv2.arcLength(contours, True)
+approx = cv2.approxPolyDP(contours, epsilon, True)
+n = []
+for x, y in zip(approx[:, 0, 0], approx[:, 0, 1]):
+            n.append((x, y))
+n = sorted(n)
+#print('找到的四点', n)
+
+
+#========画所有点
+
+
+
+tmp=image.copy()
+tmp2=image.copy()
+tmp3=image.copy()
+# for i in n:
+#     tmp=cv2.circle(tmp,i,2,(255,255,255),1)
+# cv2.imwrite('tmp.png',tmp)    
+sort_point = []
+n_point1 = n[:2]
+n_point1.sort(key=lambda x: x[1])
+sort_point.extend(n_point1)
+n_point2 = n[2:4]
+n_point2.sort(key=lambda x: x[1])
+n_point2.reverse()
+sort_point.extend(n_point2)                     
+
+print('方法一找到的四个点',sort_point)
+for i in sort_point:
+    tmp2=cv2.circle(tmp,i,0,(255,255,0),1)
+cv2.imwrite('13图片里面方法一找的四个角.png',tmp2)    
+p1 = np.array(sort_point, dtype=np.float32)
+h = (sort_point[1][1] - sort_point[0][1] )**2+ (sort_point[1][0] - sort_point[0][0] )**2# sort_point : 左上, 左下, 右下,右上.
+h=math.sqrt(h)
+w = (sort_point[2][0] - sort_point[1][0])**2+(sort_point[2][1] - sort_point[1][1])**2
+w = math.sqrt(w)
+
+
+# h = sort_point[1][1] - sort_point[0][1]
+# w = sort_point[2][0] - sort_point[1][0]
+h=int(h)
+w=int(w)
+pts2 = np.array([[0, 0], [0, h], [w, h], [w, 0]], dtype=np.float32)
+
+M = cv2.getPerspectiveTransform(p1, pts2)
+
+dst = cv2.warpPerspective(old_image, M, (w, h))
+# #print(dst.shape)
+def show(image, window_name):
+	# cv2.namedWindow(window_name, 0)
+	cv2.imwrite(window_name+'.png', image)
+
+if w < h:
+	dst = np.rot90(dst)
+show(dst, "13里面方法一生成的图片")
+	
+	
+	
+	
+	
+	
+	
+#===============================================
+#print('下面用新方法来对比')
+
+
+
+
+#就是上一章的内容，具体就是会输出一个轮廓图像并返回一个轮廓数据
+if 1:
+    img, color, width=binary,(0,0,255),2
+    helper=img.copy()
+    import numpy as np
+    kernel = np.ones((1, 5), np.uint8)
+    if len(img.shape)>2:
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)#转换灰度图
+    else:
+        gray=img
+    cv2.imwrite('gray.png',gray)
+    ret, binary = cv2.threshold(gray,0,255,cv2.THRESH_BINARY+cv2.THRESH_TRIANGLE)
+    # binary2 = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel, anchor=(2, 0), iterations=22) # 二值化. 
+    #模糊化.
+
+    
+
+
+
+    # binary = cv2.blur(img,(5,5))
+    # binary = cv2.blur(binary,(5,5))
+    # binary = cv2.blur(binary,(5,5))
+    # binary = cv2.boxFilter(binary,-1,(5,5), normalize=True )
+    cv2.imwrite('binary998.png',binary)
+    if 1:                     
+    # 边缘检测, Sobel算子大小为3
+        edges = cv2.Canny(binary, 100, 200, apertureSize=3)
+        # 霍夫曼直线检测
+        cv2.imwrite('13里面的canny边缘化图片.png',edges )
+
+        gao=edges.shape[0]
+        chang=edges.shape[1]
+
+
+
+
+        lines = cv2.HoughLinesP(edges, 1, 1*np.pi / 180, int((gao+chang)/40), minLineLength=(gao+chang)/20, maxLineGap=(gao+chang)/20)
+
+        #==========话lines
+        fffff=tmp3.copy()
+        for line in lines:
+        # 获取坐标 
+            x1, y1, x2, y2 = line[0]
+            cv2.line(fffff, (x1, y1), (x2, y2), (0, 255, 255), thickness=1)
+        cv2.imwrite('13方法2的画全部的线.png',fffff)
+
+
+        
+        #================进行直线筛选.
+        panduanzhixiantupian=binary.copy()
+        cv2.imwrite('check.png',panduanzhixiantupian)
+        #===========使用算法1里面生成的四边形, 如果我们的直线在四边形里面那么就是没必要的, 可以删除.
+        dexsave=[]
+        for dex,i67 in enumerate(lines):
+            pt=(i67[0][0]+i67[0][2])/2,(i67[0][1]+i67[0][3])/2
+            a=cv2.pointPolygonTest(approx, pt, 1)
+            print(a<=0)
+            if a<=0:
+                 dexsave.append(dex)
+        lines=lines[dexsave]
+        approx
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        #print()
+        import math
+        #=========输入一个直线, 计算他跟x轴的夹角.
+        def jiajiao(line):   # 4点决定一个线
+                if (line[2]-line[0]) :
+                    a=math.atan((line[3]-line[1])/(line[2]-line[0]))/math.pi*180 
+                    # if a<0:
+                    #     return 180+a
+                    return a
+                else:
+                    return 90
+        # a=jiajiao([0,0,-1,1])
+        a=[jiajiao([i[0][0],i[0][1],i[0][2],i[0][3]]) for i in lines]
+        a=[i  if i>=0 else 180+i for i in a]
+        jiajiaobaocun=a
+
+        import matplotlib.pyplot as plt
+        import numpy as np
+        # import libraries
+        import numpy as np
+        import pandas as pd
+        import matplotlib.pyplot as plt
+        # a=[round(i) for i in a]
+        # #print(a)
+        # plt.hist(a, density=False)
+        # plt.savefig('aaaa.png')
+        # #print()
+        # 按照相差上下10度来分类.
+
+        #============下面按照上下15度进行分类.因为每一个类别一定有一个中间轴.中间轴一定是这些店里面的值.我们来存索引.
+        # yuzhi=15
+        #==========先把角度变到0到180
+        a=[i  if i>=0 else 180+i for i in a]
+
+        if a:#
+                pass
+                #根据我们身份证的理解.
+                # 我们要的2个中州一定是距离最大的.一般是0和90度.
+                juli=0#先算出距离最大值.
+                for dex,i in enumerate(a):
+                    for dex2,j in enumerate(a):
+                        tmp=min(abs(i-j),abs(180+i-j),abs(180-i+j))
+                        if tmp>juli:
+                            baocun=dex,dex2
+                            juli=tmp
+                #print(baocun,juli)
+                yuzhi=juli/3
+        else:
+             1111111
+            #print('没有任何一个直线,所以算法不进行后续边界识别')
+        #=============先横线,再竖线.
+        
+        if baocun:
+            baocun=list(baocun)
+            if a[baocun[0]]>a[baocun[1]]:
+                 baocun[0],baocun[1]=baocun[1],baocun[0]
+            j=a[baocun[0]]
+            list1=[dex for dex,i in enumerate(a) if min(abs(i-j),abs(180+i-j),abs(180-i+j))<yuzhi]
+            j=a[baocun[1]]
+            list2=[dex for dex,i in enumerate(a) if min(abs(i-j),abs(180+i-j),abs(180-i+j))<yuzhi]
+        #print('打印两组直线角度阵营',list1,list2)
+        #=========分别算投影, 去掉一个方向分量之后我们进行第二次细分这2住店.这样就得到了4个边的阵营.
+
+
+        
+        
+        zhixianfenzu=[]
+        a1=list1
+        a2=list2
+        for aaa in [a1,a2]:
+            #======算出每个阵营的投影直线.
+            #==先算每个阵营的中心直线
+            zhenying=aaa
+            zhenyingjiaodu=[jiajiaobaocun[i] for i in aaa]
+            zhenyingzhixianjiaodu=sum(zhenyingjiaodu)/len(zhenyingjiaodu)
+            #print(zhenyingzhixianjiaodu)
+            chuizhijiaodu=zhenyingzhixianjiaodu+90
+
+
+            a=math.tan(chuizhijiaodu/180*math.pi)
+            xiangliang=(1,a*1)
+            list1zhongdian=[[(lines[i][0][0]+lines[i][0][2])/2,(lines[i][0][1]+lines[i][0][3])/2] for i in aaa]
+            touying=[(i[0]*xiangliang[0]+i[1]*xiangliang[1])/math.sqrt(xiangliang[0]**2+xiangliang[1]**2) for i in list1zhongdian]
+
+
+
+
+            #=========继续用间隔来分类
+            juli=0#先算出距离最大值.
+            for dex,i in enumerate(touying):
+                for dex2,j in enumerate(touying):
+                    tmp=abs(i-j)
+                    if tmp>juli:
+                        baocun=dex,dex2
+                        juli=tmp
+            #print(baocun,juli)
+            yuzhi=juli/3
+            #print(a)
+            a=touying
+            if baocun:
+                baocun=list(baocun)
+                if a[baocun[0]]<a[baocun[1]]:
+                     baocun[0],baocun[1]=baocun[1],baocun[0]
+                j=a[baocun[0]] # 跟第一点近的放list1里面
+                list1=[dex for dex,i in enumerate(a) if abs(i-j)<yuzhi]
+                j=a[baocun[1]]  
+                list2=[dex for dex,i in enumerate(a) if abs(i-j)<yuzhi]
+
+                #print(1)
+                list1inalldex=[zhenying[i] for i in list1]
+                list2inalldex=[zhenying[i] for i in list2]
+                zhixianfenzu.append(list1inalldex)
+                zhixianfenzu.append(list2inalldex)
+            #print()
+        #print()
+
+
+
+
+
+
+
+
+
+        zhixianfenzu# 里面有4个数组, 每个数组表示一个直线族.  数组里面的数据是: shang xia  you zuo     4条变.
+        #=========下面把每组的直线拟合成一条直线
+        #==================
+        all_four_line=[]
+
+
+        fffff=tmp3.copy()
+        for dex in zhixianfenzu[0]:
+        # 获取坐标 
+            line=lines[dex]
+            x1, y1, x2, y2 = line[0]
+            cv2.line(fffff, (x1, y1), (x2, y2), (0, 255, 255), thickness=1)
+        cv2.imwrite('13方法2的画全部的线下.png',fffff)
+
+
+        fffff=tmp3.copy()
+        for dex in zhixianfenzu[1]:
+        # 获取坐标 
+            line=lines[dex]
+            x1, y1, x2, y2 = line[0]
+            cv2.line(fffff, (x1, y1), (x2, y2), (0, 255, 255), thickness=1)
+        cv2.imwrite('13方法2的画全部的线上.png',fffff)
+
+        fffff=tmp3.copy()
+        for dex in zhixianfenzu[2]:
+        # 获取坐标 
+            line=lines[dex]
+            x1, y1, x2, y2 = line[0]
+            cv2.line(fffff, (x1, y1), (x2, y2), (0, 255, 255), thickness=1)
+        cv2.imwrite('13方法2的画全部的线右.png',fffff)
+
+
+        fffff=tmp3.copy()
+        for dex in zhixianfenzu[3]:
+        # 获取坐标 
+            line=lines[dex]
+            x1, y1, x2, y2 = line[0]
+            cv2.line(fffff, (x1, y1), (x2, y2), (0, 255, 255), thickness=1)
+        cv2.imwrite('13方法2的画全部的线左.png',fffff)
+
+##############################################################################============下面进行四边融合算法.之前的平均值方法不好.
+
+        #########=======把每条直线的所有点都找到.
+
+
+        #print('开始处理上面的直线')
+        upper=[]
+        for i in zhixianfenzu[0]:
+             #print(lines[i])
+             upper.append([lines[i][0][0],lines[i][0][1]])
+             upper.append([lines[i][0][2],lines[i][0][3]])
+        #print('-'*30)
+
+
+
+
+
+
+
+
+
+
+
+#====================================================
+        if len(zhixianfenzu)==4:
+            pass
+        #没太好思路, 就平均数吧
+            for i in zhixianfenzu:
+                tmpzhixian= np.squeeze(lines[i], axis = 1)
+                tmpjiajiao=np.array(jiajiaobaocun)[i].mean()
+                tmpzhongxindian=np.array([(tmpzhixian[:,0]+tmpzhixian[:,2])/2,(tmpzhixian[:,1]+tmpzhixian[:,3])/2]).T
+
+
+                tmpzhongdian2=tmpzhixian.mean(axis=0)
+                tmpzhongdian2=(tmpzhongdian2[0]+tmpzhongdian2[2])/2,(tmpzhongdian2[1]+tmpzhongdian2[3])/2
+                #print(1)
+                all_four_line.append([tmpzhongdian2,tmpjiajiao])
+        #=======转化为双点是.
+        all_four_line2=[]
+        for i in all_four_line:
+                dian=i[0]
+                jiaodu=i[1]
+                a=math.tan(jiaodu/180*math.pi)
+                all_four_line2.append([dian[0],dian[1],dian[0]+1,dian[1]+a])
+        all_four_line=all_four_line2
+
+#================画组合后的4条线:
+        # all_four_line
+        # fffff=tmp3.copy()
+        # for dex in all_four_line:
+        # # 获取坐标 
+        #     line=dex
+        #     x1, y1, x2, y2 = line[0]
+        #     cv2.line(fffff, (x1, y1), (x2, y2), (0, 255, 255), thickness=1)
+        # cv2.imwrite('13方法2的画组合后的四条线.png',fffff)
+
+
+
+
+
+        #===========计算交点
+        def cross_point(line1, line2):  # 计算交点函数
+            #是否存在交点
+            point_is_exist=False
+            x=0
+            y=0
+            x1 = line1[0]  # 取四点坐标
+            y1 = line1[1]
+            x2 = line1[2]
+            y2 = line1[3]
+
+            x3 = line2[0]
+            y3 = line2[1]
+            x4 = line2[2]
+            y4 = line2[3]
+
+            if (x2 - x1) == 0:
+                k1 = None
+            else:
+                k1 = (y2 - y1) * 1.0 / (x2 - x1)  # 计算k1,由于点均为整数，需要进行浮点数转化
+                b1 = y1 * 1.0 - x1 * k1 * 1.0  # 整型转浮点型是关键
+
+            if (x4 - x3) == 0:  # L2直线斜率不存在操作
+                k2 = None
+                b2 = 0
+            else:
+                k2 = (y4 - y3) * 1.0 / (x4 - x3)  # 斜率存在操作
+                b2 = y3 * 1.0 - x3 * k2 * 1.0
+
+            if k1 is None:
+                if not k2 is None:
+                    x = x1
+                    y = k2 * x1 + b2
+                    point_is_exist=True
+            elif k2 is None:
+                x=x3
+                y=k1*x3+b1
+            elif not k2==k1:
+                x = (b2 - b1) * 1.0 / (k1 - k2)
+                y = k1 * x * 1.0 + b1 * 1.0
+                point_is_exist=True
+            return point_is_exist,[x, y]
+        #=======算每一个直线跟其他直线的交点
+        #diyige :
+        all3=[]
+        tmp=all_four_line[0]
+        tmp2=all_four_line[1]
+        jiaodian1=cross_point(tmp,tmp2)
+        tmp=all_four_line[0]
+        tmp2=all_four_line[2]
+        jiaodian2=cross_point(tmp,tmp2)
+        tmp=all_four_line[0]
+        tmp2=all_four_line[3]
+        jiaodian3=cross_point(tmp,tmp2)
+        all2=[]
+        if jiaodian1[0]:
+                all2.append(jiaodian1[1])
+        if jiaodian2[0]:
+                all2.append(jiaodian2[1])   
+        if jiaodian3[0]:
+                all2.append(jiaodian3[1])
+        all2.sort(key=lambda x:abs(x[0])+abs(x[1]) )
+        all2=all2[:2]
+        all3+=all2
+
+
+        tmp=all_four_line[1]
+        tmp2=all_four_line[0]
+        jiaodian1=cross_point(tmp,tmp2)
+        tmp=all_four_line[1]
+        tmp2=all_four_line[2]
+        jiaodian2=cross_point(tmp,tmp2)
+        tmp=all_four_line[1]
+        tmp2=all_four_line[3]
+        jiaodian3=cross_point(tmp,tmp2)
+        all2=[]
+        if jiaodian1[0]:
+                all2.append(jiaodian1[1])
+        if jiaodian2[0]:
+                all2.append(jiaodian2[1])   
+        if jiaodian3[0]:
+                all2.append(jiaodian3[1])
+        all2.sort(key=lambda x:abs(x[0])+abs(x[1]) )
+        all2=all2[:2]
+        all3+=all2
+        #print(1)
+
+        for dex,i in enumerate(all3):
+             all3[dex][0]=round(i[0])
+             all3[dex][1]=round(i[1])
+        print('处理钱的四点',all3)
+        #print(all3,'最后的四点!!!!!!!!!!!!!!!')
+        #=====================check!!!!!!!!!!
+
+        #====================最后找到的四点基本是我们要的边缘上的点的差2个坐标左右.
+        #================在图片修复9个点
+        for i8 in range(4):
+            fffff=tmp3.copy()
+            cv2.imwrite('24123j12lk3j1l23j2lkj31.png',fffff[:30]) #========windows画板上的坐标对应, (y,x)
+            tmppoint=all3[i8]
+            bianchang=5
+            candidate=[[i,j] for i in range(tmppoint[0]-bianchang,tmppoint[0]+bianchang+1) for j in range(tmppoint[1]-bianchang,tmppoint[1]+bianchang+1)]
+            candidate.sort(key=lambda x:(x[0]-tmppoint[0])**2+(x[1]-tmppoint[1])**2)
+
+            for i3 in candidate:
+                round2=[[i,j] for i in range(i3[0]-1,i3[0]+2) for j in range(i3[1]-1,i3[1]+2)]
+    
+                # sedu=[sum(fffff[i4[1],i4[0]])>100 if (i4[1]<=fffff.shape[0] and i4[0]<=fffff.shape[0]) else 0 for i4 in round2] # 周围9个像素的色度.
+                sedu=[]
+                for i4 in round2:
+                     if (i4[1]<=fffff.shape[0] and i4[0]<=fffff.shape[1]):
+                          sedu.append(sum(fffff[i4[1],i4[0]])>100)
+                     else:
+                          sedu.append(0)
+
+
+                all_sedu=sum(sedu)
+                if all_sedu>=3  and  sum(fffff[i3[1],i3[0]])>10: # 加判断, 候选点本身也要有亮度!, 我们让他正好踩到图像的边.
+                    all3[i8]=i3
+                    #print(i3,76867867867)
+                    break
+        
+        #print()
+
+
+
+
+
+
+
+
+        #==============画点.
+ 
+        binary=gray
+        for i in all3:
+            tmp3=cv2.circle(tmp3,(int(i[0]),int(i[1])),00,(255,255,255),0)
+        print('处理后的四点',all3,)
+        cv2.imwrite('13里面方法2的四角.png',tmp3)
+        #=======因为平行肯定有一个线超长.
+        # contours,hierarchy = cv2.findContours(binary2,cv2.RETR_CCOMP  ,cv2.CHAIN_APPROX_SIMPLE)
+        # tuxingzhouchang=cv2.arcLength(contours[0], True)
+        # #print(1)
+        #paixu jike
+
+
+
+
+
+        # lines = cv2.HoughLines(edges,1,np.pi/180,100)
+        #====================下面我们做仿射变换即可.
+        all3=np.array(all3)[:,None,...]
+        #print(1)
+        approx=all3
+        n = []
+        for x, y in zip(approx[:, 0, 0], approx[:, 0, 1]):
+            n.append((x, y))
+        n = sorted(n)
+        sort_point = []
+        n_point1 = n[:2]
+        n_point1.sort(key=lambda x: x[1])
+        sort_point.extend(n_point1)
+        n_point2 = n[2:4]
+        n_point2.sort(key=lambda x: x[1])
+        n_point2.reverse()
+        sort_point.extend(n_point2)
+        p1 = np.array(sort_point, dtype=np.float32)
+        h = (sort_point[1][1] - sort_point[0][1] )**2+ (sort_point[1][0] - sort_point[0][0] )**2# sort_point : 左上, 左下, 右下,右上.
+        h=math.sqrt(h)
+        w = (sort_point[2][0] - sort_point[1][0])**2+(sort_point[2][1] - sort_point[1][1])**2
+        w=math.sqrt(w)
+        pts2 = np.array([[0, 0], [0, h], [w, h], [w, 0]], dtype=np.float32)
+        h=round(h)
+        w=round(w)
+        M = cv2.getPerspectiveTransform(p1, pts2)
+        
+        dst = cv2.warpPerspective(old_image, M, (w, h))
+        # #print(dst.shape)
+        def show(image, window_name):
+            # cv2.namedWindow(window_name, 0)
+            cv2.imwrite(window_name+'.png', image)
+
+        if w < h:
+            dst = np.rot90(dst)
+
+        show(dst, '13里面方法2的最后图片')
+        
+
+
+        
+
+	
+	
+	
+	

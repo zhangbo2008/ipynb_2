@@ -1,0 +1,5 @@
+np.set_printoptions(suppress=True) # 取消记录的科学计数法.方便查看数值
+print('打印真假钞钞之间的相似度')
+t=list(range(20))+list(range(-20,0))
+dict_all=model(old_all_saver_for_test[t])
+print( print(np.savetxt('final.txt',(dict_all@dict_all.T).detach().numpy()         ,fmt='%f',)))  # # 取消记录的科学计数法.方便查看数值

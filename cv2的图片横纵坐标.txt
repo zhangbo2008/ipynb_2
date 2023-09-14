@@ -1,0 +1,17 @@
+import cv2
+a=cv2.imread('0.jpg')
+cv2.imwrite('aaa.jpg',a[50:,20:])
+
+#  看的出来cv2里面第一个轴是y轴, 第二个轴是x轴
+y0表示图片的上
+ymax表示图片的下
+x0表示图片的左
+xmax表示图片的右.
+
+
+
+
+
+
+
+
