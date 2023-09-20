@@ -4,6 +4,6 @@ for i in range(10):
         dataset = load_dataset("imdb")#=======这里写上需要反复重连的代码.
         break
     except Exception as  e:
-        print(-11111111111111)
+        print(f'正在进行第{i+1}次尝试')
         print(e)
         pass
