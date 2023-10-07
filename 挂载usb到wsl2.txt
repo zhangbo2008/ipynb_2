@@ -1,0 +1,2 @@
+mount -t drvfs F: /mnt/usb
+cd /mnt/usb

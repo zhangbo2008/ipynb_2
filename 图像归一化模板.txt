@@ -1,0 +1,9 @@
+gray = cv2.cvtColor(i,cv2.COLOR_BGR2GRAY)  
+ffffffffffff=gray
+guiyi=int(np.mean(gray))
+
+gray=gray.astype(int) #=======均值归一化到127=255/2
+gray=gray+127-guiyi #============会发生越界255的情况. 还是要转int才行
+gray=np.clip(gray,0,255)
+
+gray=gray.astype(np.uint8)
