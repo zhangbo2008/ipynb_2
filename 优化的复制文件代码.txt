@@ -1,0 +1,18 @@
+# 2023-09-27,10点00 用图像做差来做真假鉴别.
+
+import os
+
+#真钱yangben :
+
+from pathlib import Path 
+x='/mnt/usb/CNY/100V15/ZZ'
+a=[y for y in Path(x).rglob('*R_F.bmp') if y.is_file()][:]
+print(len(a))
+
+import shutil
+import os
+lujing='saving100v15ZZtrue'
+os.makedirs(lujing,exist_ok=True)
+for dex,i in enumerate(a):
+    shutil.copy(str(i),lujing+f'/{dex}.bmp')
+
