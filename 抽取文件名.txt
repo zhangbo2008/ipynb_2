@@ -1,0 +1,4 @@
+import os
+
+a = os.path.basename(os.path.splitext('sdafasdf/dsaf/dsf.py')[0])
+print(a)

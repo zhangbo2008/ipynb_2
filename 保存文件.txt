@@ -1,0 +1,11 @@
+def makedir(path):
+    dir_path = os.path.dirname(path)  # 获取路径名，删掉文件名
+
+    os.makedirs(dir_path, exist_ok=True)
+	
+	
+path = f'ceshijianwei/yuanshi_after_quheitiaoandguiyihua/{dex}.png'
+
+makedir(path)  # ======归一化
+
+cv2.imwrite(path, gray)
